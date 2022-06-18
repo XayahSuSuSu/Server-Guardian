@@ -1,0 +1,37 @@
+# 瞩暮行者 - 服务器端
+> 环境：Docker
+
+## 一、搭建RTMP服务器
+### 拉取`nginx-rtmp`镜像
+```
+docker pull alfg/nginx-rtmp
+```
+
+### 创建并运行`nginx-rtmp`容器
+```
+docker run -itd --name nginx-rtmp -p 3308:1935 alfg/nginx-rtmp
+```
+
+### 推流（OBS Studio）
+以`rtmp://127.0.0.1:3308/stream/record`为例
+
+服务器：
+```
+rtmp://127.0.0.1:3308/stream
+```
+
+串流密钥：
+```
+record
+```
+
+![推流设置](images/推流设置.png "推流设置")
+
+### 测试（PotPlayer）
+打开链接
+
+![测试0](images/测试0.png "测试0")
+
+查看RTMP流
+
+![测试1](images/测试1.png "测试1")
