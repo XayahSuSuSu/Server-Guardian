@@ -35,3 +35,16 @@ record
 查看RTMP流
 
 ![测试1](images/测试1.png "测试1")
+
+### 推流（OpenCV）
+以`rtmp://127.0.0.1:3308/stream/car`为例
+
+修改`PushRTMP.py`中的`rtmp`变量为推流地址
+```
+rtmp = r'rtmp://127.0.0.1:33308/stream/car'
+```
+
+运行`PushRTMP.py`
+```
+python PushRTMP.py
+```
