@@ -48,3 +48,10 @@ rtmp = r'rtmp://127.0.0.1:33308/stream/car'
 ```
 python PushRTMP.py
 ```
+
+### RTSP流转RTMP流（FFmpeg）
+以`rtsp://admin:123456@192.168.1.56:554/ch01.264` → `rtmp://127.0.0.1:33308/stream/drone`为例
+安装**FFmpeg**并再用其转流
+```
+ffmpeg -i "rtsp://admin:123456@192.168.1.56:554/ch01.264" -vcodec copy -acodec copy -f flv "rtmp://127.0.0.1:33308/stream/drone"
+```
