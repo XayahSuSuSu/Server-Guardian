@@ -1,9 +1,13 @@
 import json
 import os
+import threading
 from abc import ABC
+from concurrent.futures import ThreadPoolExecutor
 
+import tornado.gen
 import tornado.ioloop
 import tornado.web
+from tornado.concurrent import run_on_executor
 
 from util import db
 
@@ -22,6 +26,53 @@ class Check(BaseHandler, ABC):
             'msg': '操作成功！',
             'data': {}
         }, ensure_ascii=False))
+
+
+semaphore = threading.Semaphore(0)
+action_list = []
+
+
+class Action(tornado.web.RequestHandler, ABC):
+    executor = ThreadPoolExecutor(2)
+
+    @tornado.gen.coroutine
+    def get(self):
+        yield self.sem()
+        if len(action_list) != 0:
+            action_dic = action_list.pop()
+            db.insert('action', [action_dic['action'], 'finished'])
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': action_dic
+            }, ensure_ascii=False))
+        else:
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {}
+            }, ensure_ascii=False))
+
+    @run_on_executor
+    def sem(self):
+        semaphore.acquire()
+        return
+
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'action' in body_arguments:
+            action = body_arguments['action'][0].decode()
+            action_dic = {
+                'action': action,
+                'state': ''
+            }
+            action_list.append(action_dic)
+            semaphore.release()
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': action_dic
+            }, ensure_ascii=False))
 
 
 class AppData(BaseHandler, ABC):
@@ -67,6 +118,7 @@ def make_app():
     return tornado.web.Application([
         (r'/api/v1/check', Check),
         (r'/api/v1/app/data', AppData),
+        (r'/api/v1/action', Action),
     ], static_path=os.path.join(os.path.dirname(__file__), "asserts"), static_url_prefix="/asserts/")
 
 

@@ -16,6 +16,12 @@ FIELD_DATA = [
     "battery_drone text",
 ]  # 字段
 
+TABLE_ACTION = 'action'  # 操作表名
+FIELD_ACTION = [
+    "action text,",
+    "state text",
+]  # 字段
+
 
 def timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -48,6 +54,14 @@ def init():
         "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_DATA)
         + "created_at timestamp,updated_at timestamp,"
         + field_data
+        + ");")
+
+    # 创建数据表(ACTION)
+    field_action = "".join(FIELD_ACTION)
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACTION)
+        + "created_at timestamp,updated_at timestamp,"
+        + field_action
         + ");")
 
 
