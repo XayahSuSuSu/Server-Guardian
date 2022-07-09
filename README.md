@@ -37,7 +37,7 @@ record
 ![测试1](images/测试1.png "测试1")
 
 ### 推流（OpenCV）
-以`rtmp://127.0.0.1:3308/stream/car`为例
+以`rtmp://127.0.0.1:33308/stream/car`为例
 
 修改`PushRTMP.py`中的`rtmp`变量为推流地址
 ```
@@ -55,4 +55,25 @@ python PushRTMP.py
 
 ```
 ffmpeg -i "rtsp://admin:123456@192.168.1.56:554/ch01.264" -vcodec copy -acodec copy -f flv "rtmp://127.0.0.1:33308/stream/court"
+```
+
+## 二、搭建Tornado后端
+### 拉取`mysql`镜像
+```
+docker pull mysql:latest
+```
+
+### 创建并运行`mysql`容器
+```
+docker run -itd --name mysql-test -p 33306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
+```
+
+### 安装相关依赖
+```
+pip install -r requirements.txt
+```
+
+### 运行
+```
+python3 Tornado.py
 ```
