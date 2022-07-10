@@ -66,8 +66,11 @@ class Action(tornado.web.RequestHandler, ABC):
                 'action': action,
                 'state': ''
             }
+            if len(action_list) != 0:
+                action_list.clear()
+            else:
+                semaphore.release()
             action_list.append(action_dic)
-            semaphore.release()
             self.write(json.dumps({
                 'code': 1,
                 'msg': '操作成功！',
