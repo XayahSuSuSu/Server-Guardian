@@ -40,6 +40,7 @@ class Action(tornado.web.RequestHandler, ABC):
         yield self.sem()
         if len(action_list) != 0:
             action_dic = action_list.pop()
+            print("Action", "get", action_dic)
             db.insert('action', [action_dic['action'], 'finished'])
             self.write(json.dumps({
                 'code': 1,
@@ -66,6 +67,7 @@ class Action(tornado.web.RequestHandler, ABC):
                 'action': action,
                 'state': ''
             }
+            print("Action", "post", action_dic)
             if len(action_list) != 0:
                 action_list.clear()
             else:
