@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import threading
@@ -24,6 +25,28 @@ class Check(BaseHandler, ABC):
         self.write(json.dumps({
             'code': 1,
             'msg': '操作成功！',
+            'data': {}
+        }, ensure_ascii=False))
+
+
+class Login(BaseHandler, ABC):
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'username' in body_arguments and 'password' in body_arguments:
+            para_username = body_arguments['username'][0].decode()
+            para_password = body_arguments['password'][0].decode()
+            for i in db.get_all('account'):
+                if i['username'] == para_username:
+                    if i['password'] == para_password:
+                        self.write(json.dumps({
+                            'code': 1,
+                            'msg': '登录成功！',
+                            'data': {}
+                        }, ensure_ascii=False))
+                        return
+        self.write(json.dumps({
+            'code': -1,
+            'msg': '登录失败！请检查用户名或密码',
             'data': {}
         }, ensure_ascii=False))
 
@@ -124,6 +147,7 @@ def make_app():
         (r'/api/v1/check', Check),
         (r'/api/v1/app/data', AppData),
         (r'/api/v1/action', Action),
+        (r'/api/v1/login', Login),
     ], static_path=os.path.join(os.path.dirname(__file__), "asserts"), static_url_prefix="/asserts/")
 
 
@@ -132,6 +156,10 @@ if __name__ == "__main__":
     db.init()
     if len(db.get_all('data')) == 0:
         db.insert('data', ['', '', ''])
+    if len(db.get_all('account')) == 0:
+        username = 'admin'
+        password = hashlib.md5(username.encode('utf8')).hexdigest()
+        db.insert('account', [username, password])
     # 判断是否存在asserts文件夹，没有则创建
     if not os.path.exists("asserts"):
         os.mkdir("asserts")

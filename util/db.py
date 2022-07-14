@@ -22,6 +22,12 @@ FIELD_ACTION = [
     "state text",
 ]  # 字段
 
+TABLE_ACCOUNT = 'account'  # 账户表名
+FIELD_ACCOUNT = [
+    "username text,",
+    "password text",
+]  # 字段
+
 
 def timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -62,6 +68,14 @@ def init():
         "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACTION)
         + "created_at timestamp,updated_at timestamp,"
         + field_action
+        + ");")
+
+    # 创建数据表(ACCOUNT)
+    field_account = "".join(FIELD_ACCOUNT)
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACCOUNT)
+        + "created_at timestamp,updated_at timestamp,"
+        + field_account
         + ");")
 
 
