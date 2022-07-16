@@ -28,6 +28,11 @@ FIELD_ACCOUNT = [
     "password text",
 ]  # 字段
 
+TABLE_AUTHORIZE = 'authorize'  # 授权表名
+FIELD_AUTHORIZE = [
+    "device_code text",
+]  # 字段
+
 
 def timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -54,7 +59,7 @@ def init():
     cursor.execute("CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARSET utf8 COLLATE utf8_general_ci;".format(DB))
     # 选择数据库
     cursor.execute("use {};".format(DB))
-    # 创建数据表(DATA)
+    # 创建表(DATA)
     field_data = "".join(FIELD_DATA)
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_DATA)
@@ -62,7 +67,7 @@ def init():
         + field_data
         + ");")
 
-    # 创建数据表(ACTION)
+    # 创建表(ACTION)
     field_action = "".join(FIELD_ACTION)
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACTION)
@@ -70,12 +75,20 @@ def init():
         + field_action
         + ");")
 
-    # 创建数据表(ACCOUNT)
+    # 创建表(ACCOUNT)
     field_account = "".join(FIELD_ACCOUNT)
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACCOUNT)
         + "created_at timestamp,updated_at timestamp,"
         + field_account
+        + ");")
+
+    # 创建表(AUTHORIZE)
+    field_authorize = "".join(FIELD_AUTHORIZE)
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_AUTHORIZE)
+        + "created_at timestamp,updated_at timestamp,"
+        + field_authorize
         + ");")
 
 

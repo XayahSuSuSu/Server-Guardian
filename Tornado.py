@@ -5,6 +5,7 @@ import threading
 from abc import ABC
 from concurrent.futures import ThreadPoolExecutor
 
+import qrcode
 import tornado.gen
 import tornado.ioloop
 import tornado.web
@@ -142,12 +143,63 @@ class AppData(BaseHandler, ABC):
         }, ensure_ascii=False))
 
 
+class Authorize(BaseHandler, ABC):
+    def get(self):
+        para_id = self.get_query_arguments('id')
+        if len(para_id) == 0:
+            db.insert('authorize', [''])
+            authorize_id = db.get_all('authorize')[-1]['id']
+            img = qrcode.make(json.dumps({
+                'id': authorize_id
+            }))
+            asserts = "asserts/qrcode_{}.png".format(authorize_id)
+            img.save(asserts)
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {
+                    'id': authorize_id,
+                    'url': asserts
+                }
+            }, ensure_ascii=False))
+        else:
+            authorize_id = db.get_all('authorize')
+            ret = {
+                'id': '',
+                'device_code': ''
+            }
+            for i in authorize_id:
+                if str(i['id']) == para_id[0]:
+                    ret = i
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {
+                    'id': ret['id'],
+                    'device_code': ret['device_code']
+                }
+            }, ensure_ascii=False))
+
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'id' in body_arguments and 'device_code' in body_arguments:
+            authorize_id = body_arguments['id'][0].decode()
+            device_code = body_arguments['device_code'][0].decode()
+            db.update('authorize', authorize_id, 'device_code', device_code)
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {}
+            }, ensure_ascii=False))
+
+
 def make_app():
     return tornado.web.Application([
         (r'/api/v1/check', Check),
         (r'/api/v1/app/data', AppData),
         (r'/api/v1/action', Action),
         (r'/api/v1/login', Login),
+        (r'/api/v1/authorize', Authorize),
     ], static_path=os.path.join(os.path.dirname(__file__), "asserts"), static_url_prefix="/asserts/")
 
 
