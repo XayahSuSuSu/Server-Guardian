@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import threading
+import time
 from abc import ABC
 from concurrent.futures import ThreadPoolExecutor
 
@@ -129,9 +130,9 @@ class AppData(BaseHandler, ABC):
             battery_car = body_arguments['battery_car'][0].decode()
         if 'battery_drone' in body_arguments:
             battery_drone = body_arguments['battery_drone'][0].decode()
-        db.update('data', 1, 'state', state)
-        db.update('data', 1, 'battery_car', battery_car)
-        db.update('data', 1, 'battery_drone', battery_drone)
+        db.update_by_id('data', 1, 'state', state)
+        db.update_by_id('data', 1, 'battery_car', battery_car)
+        db.update_by_id('data', 1, 'battery_drone', battery_drone)
         self.write(json.dumps({
             'code': 1,
             'msg': '操作成功！',
@@ -152,7 +153,7 @@ class Authorize(BaseHandler, ABC):
             img = qrcode.make(json.dumps({
                 'id': authorize_id
             }))
-            asserts = "asserts/qrcode_{}.png".format(authorize_id)
+            asserts = "asserts/authorize/qrcode_{}.png".format(authorize_id)
             img.save(asserts)
             self.write(json.dumps({
                 'code': 1,
@@ -185,12 +186,54 @@ class Authorize(BaseHandler, ABC):
         if 'id' in body_arguments and 'device_code' in body_arguments:
             authorize_id = body_arguments['id'][0].decode()
             device_code = body_arguments['device_code'][0].decode()
-            db.update('authorize', authorize_id, 'device_code', device_code)
+            db.update_by_id('authorize', authorize_id, 'device_code', device_code)
             self.write(json.dumps({
                 'code': 1,
                 'msg': '操作成功！',
                 'data': {}
             }, ensure_ascii=False))
+
+
+class Device(BaseHandler, ABC):
+    def get(self):
+        devices = db.get_all('device')
+        print(devices)
+        ret = []
+        for i in devices:
+            ret.append({
+                'id': i['id'],
+                'factory_date': i['factory_date'].strftime("%Y-%m-%d %H:%M:%S"),
+                'device_code': i['device_code'],
+                'bind_state': i['bind_state'],
+                'qrcode_path': i['qrcode_path'],
+            })
+        self.write(json.dumps({
+            'code': 1,
+            'msg': '操作成功！',
+            'data': ret
+        }, ensure_ascii=False))
+
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'bind_state' in body_arguments and 'device_code' in body_arguments:
+            bind_state = body_arguments['bind_state'][0].decode()
+            device_code = body_arguments['device_code'][0].decode()
+            db.update_by_field('device', 'device_code', device_code, 'bind_state', bind_state)
+        else:
+            db_timestamp = db.db_timestamp()
+            timestamp = time.mktime(time.strptime(db_timestamp, "%Y-%m-%d %H:%M:%S"))
+            device_code = hashlib.md5(str(timestamp).encode('utf8')).hexdigest()
+            img = qrcode.make(json.dumps({
+                'device_code': device_code
+            }))
+            asserts = "asserts/devices/qrcode_{}.png".format(timestamp)
+            img.save(asserts)
+            db.insert('device', [db_timestamp, device_code, '否', asserts])
+        self.write(json.dumps({
+            'code': 1,
+            'msg': '操作成功！',
+            'data': {}
+        }, ensure_ascii=False))
 
 
 def make_app():
@@ -200,6 +243,7 @@ def make_app():
         (r'/api/v1/action', Action),
         (r'/api/v1/login', Login),
         (r'/api/v1/authorize', Authorize),
+        (r'/api/v1/device', Device),
     ], static_path=os.path.join(os.path.dirname(__file__), "asserts"), static_url_prefix="/asserts/")
 
 
@@ -215,6 +259,10 @@ if __name__ == "__main__":
     # 判断是否存在asserts文件夹，没有则创建
     if not os.path.exists("asserts"):
         os.mkdir("asserts")
+    if not os.path.exists("asserts/devices"):
+        os.mkdir("asserts/devices")
+    if not os.path.exists("asserts/authorize"):
+        os.mkdir("asserts/authorize")
     app = make_app()
     app.listen(port=33307)
     tornado.ioloop.IOLoop.current().start()

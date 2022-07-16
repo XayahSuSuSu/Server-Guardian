@@ -33,8 +33,16 @@ FIELD_AUTHORIZE = [
     "device_code text",
 ]  # 字段
 
+TABLE_DEVICE = 'device'  # 设备表名
+FIELD_DEVICE = [
+    "factory_date timestamp,",
+    "device_code text,",
+    "bind_state text,",
+    "qrcode_path text",
+]  # 字段
 
-def timestamp():
+
+def db_timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -91,13 +99,21 @@ def init():
         + field_authorize
         + ");")
 
+    # 创建表(DEVICE)
+    field_device = "".join(FIELD_DEVICE)
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_DEVICE)
+        + "created_at timestamp,updated_at timestamp,"
+        + field_device
+        + ");")
+
 
 def insert(table, data):
     """插入一条记录"""
     db.ping()
     cursor = db.cursor()
     cursor.execute("use {};".format(DB))
-    insert_data = "INSERT INTO {} VALUES (0,'{}','{}'".format(table, timestamp(), timestamp())
+    insert_data = "INSERT INTO {} VALUES (0,'{}','{}'".format(table, db_timestamp(), db_timestamp())
     for i in data:
         insert_data += ",'"
         insert_data += i
@@ -107,11 +123,23 @@ def insert(table, data):
     db.commit()
 
 
-def update(table, item_id, data_name, data):
+def update_by_id(table, item_id, data_name, data):
     """更新一条记录"""
     db.ping()
     cursor = db.cursor()
     cursor.execute("use {};".format(DB))
     cursor.execute(
-        "update {} set {} = '{}',updated_at = '{}' where id = {}".format(table, data_name, data, timestamp(), item_id))
+        "update {} set {} = '{}',updated_at = '{}' where id = {}".format(table, data_name, data, db_timestamp(),
+                                                                         item_id))
+    db.commit()
+
+
+def update_by_field(table, field_name, field_data, data_name, data):
+    """更新一条记录"""
+    db.ping()
+    cursor = db.cursor()
+    cursor.execute("use {};".format(DB))
+    cursor.execute(
+        "update {} set {} = '{}',updated_at = '{}' where {} = '{}'".format(table, data_name, data, db_timestamp(),
+                                                                         field_name, field_data))
     db.commit()
