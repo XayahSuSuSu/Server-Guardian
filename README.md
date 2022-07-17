@@ -1,6 +1,9 @@
 # 瞩暮行者 - 服务器端
 > 环境：Docker
 
+## 引导
+• [API文档](https://github.com/XayahSuSuSu/Server-Guardian/wiki)
+
 ## 一、搭建RTMP服务器
 ### 拉取`nginx-rtmp`镜像
 ```
