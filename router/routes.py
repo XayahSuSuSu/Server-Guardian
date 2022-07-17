@@ -12,6 +12,22 @@ from tornado.concurrent import run_on_executor
 
 from util import db
 
+CODE_SUCCESS = 1
+MSG_SUCCESS = '操作成功'
+MSG_LOGIN_SUCCESS = '登录成功'
+
+CODE_FAILED = -1
+MSG_LOGIN_FAILED = '登录失败，请检查用户名或密码'
+MSG_PARA_LOSS = '参数丢失或不正确'
+
+
+def ret(code, msg, data):
+    return {
+        'code': code,
+        'msg': msg,
+        'data': data
+    }
+
 
 class BaseHandler(tornado.web.RequestHandler, ABC):
     def set_default_headers(self):
@@ -22,11 +38,7 @@ class BaseHandler(tornado.web.RequestHandler, ABC):
 
 class Check(BaseHandler, ABC):
     def get(self):
-        self.write(json.dumps({
-            'code': 1,
-            'msg': '操作成功！',
-            'data': {}
-        }, ensure_ascii=False))
+        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
 
 
 class Login(BaseHandler, ABC):
@@ -38,17 +50,9 @@ class Login(BaseHandler, ABC):
             for i in db.get_all('account'):
                 if i['username'] == para_username:
                     if i['password'] == para_password:
-                        self.write(json.dumps({
-                            'code': 1,
-                            'msg': '登录成功！',
-                            'data': {}
-                        }, ensure_ascii=False))
+                        self.write(json.dumps(ret(CODE_SUCCESS, MSG_LOGIN_SUCCESS, {}), ensure_ascii=False))
                         return
-        self.write(json.dumps({
-            'code': -1,
-            'msg': '登录失败！请检查用户名或密码',
-            'data': {}
-        }, ensure_ascii=False))
+        self.write(json.dumps(ret(CODE_FAILED, MSG_LOGIN_FAILED, {}), ensure_ascii=False))
 
 
 semaphore = threading.Semaphore(0)
@@ -65,17 +69,9 @@ class Action(tornado.web.RequestHandler, ABC):
             action_dic = action_list.pop()
             print("Action", "get", action_dic)
             db.insert('action', [action_dic['action'], 'finished'])
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': action_dic
-            }, ensure_ascii=False))
-        else:
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {}
-            }, ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, action_dic), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
 
     @run_on_executor
     def sem(self):
@@ -96,11 +92,9 @@ class Action(tornado.web.RequestHandler, ABC):
             else:
                 semaphore.release()
             action_list.append(action_dic)
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': action_dic
-            }, ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, action_dic), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
 class State(BaseHandler, ABC):
@@ -117,22 +111,15 @@ class State(BaseHandler, ABC):
             for i in data:
                 if i['device_code'] == para_device_code[0]:
                     state = i
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {
+            self.write(json.dumps(
+                ret(CODE_SUCCESS, MSG_SUCCESS, {
                     'device_code': state['device_code'],
                     'state': state['state'],
                     'battery_car': state['battery_car'],
                     'battery_drone': state['battery_drone']
-                }
-            }, ensure_ascii=False))
-        else:
-            self.write(json.dumps({
-                'code': -1,
-                'msg': '操作成功！',
-                'data': {}
-            }, ensure_ascii=False))
+                }), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
     def post(self):
         body_arguments = self.request.body_arguments
@@ -160,16 +147,14 @@ class State(BaseHandler, ABC):
             db.update_by_field('state', 'device_code', para_device_code, 'state', state)
             db.update_by_field('state', 'device_code', para_device_code, 'battery_car', battery_car)
             db.update_by_field('state', 'device_code', para_device_code, 'battery_drone', battery_drone)
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {
-                    'device_code': para_device_code,
-                    'state': state,
-                    'battery_car': battery_car,
-                    'battery_drone': battery_drone
-                }
-            }, ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {
+                'device_code': para_device_code,
+                'state': state,
+                'battery_car': battery_car,
+                'battery_drone': battery_drone
+            }), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
 class Authorize(BaseHandler, ABC):
@@ -183,31 +168,23 @@ class Authorize(BaseHandler, ABC):
             }))
             asserts = "asserts/authorize/qrcode_{}.png".format(authorize_id)
             img.save(asserts)
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {
-                    'id': authorize_id,
-                    'url': asserts
-                }
-            }, ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {
+                'id': authorize_id,
+                'url': asserts
+            }), ensure_ascii=False))
         else:
             authorize_id = db.get_all('authorize')
-            ret = {
+            dic = {
                 'id': '',
                 'device_code': ''
             }
             for i in authorize_id:
                 if str(i['id']) == para_id[0]:
-                    ret = i
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {
-                    'id': ret['id'],
-                    'device_code': ret['device_code']
-                }
-            }, ensure_ascii=False))
+                    dic = i
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {
+                'id': dic['id'],
+                'device_code': dic['device_code']
+            }), ensure_ascii=False))
 
     def post(self):
         body_arguments = self.request.body_arguments
@@ -215,31 +192,24 @@ class Authorize(BaseHandler, ABC):
             authorize_id = body_arguments['id'][0].decode()
             device_code = body_arguments['device_code'][0].decode()
             db.update_by_id('authorize', authorize_id, 'device_code', device_code)
-            self.write(json.dumps({
-                'code': 1,
-                'msg': '操作成功！',
-                'data': {}
-            }, ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
 class Device(BaseHandler, ABC):
     def get(self):
         devices = db.get_all('device')
         print(devices)
-        ret = []
+        dic = []
         for i in devices:
-            ret.append({
+            dic.append({
                 'id': i['id'],
                 'factory_date': i['factory_date'].strftime("%Y-%m-%d %H:%M:%S"),
                 'device_code': i['device_code'],
                 'bind_state': i['bind_state'],
                 'qrcode_path': i['qrcode_path'],
             })
-        self.write(json.dumps({
-            'code': 1,
-            'msg': '操作成功！',
-            'data': ret
-        }, ensure_ascii=False))
+        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, dic), ensure_ascii=False))
 
     def post(self):
         body_arguments = self.request.body_arguments
@@ -258,11 +228,7 @@ class Device(BaseHandler, ABC):
             img.save(asserts)
             db.insert('device', [db_timestamp, device_code, '否', asserts])
             db.insert('state', [device_code, '', '', ''])
-        self.write(json.dumps({
-            'code': 1,
-            'msg': '操作成功！',
-            'data': {}
-        }, ensure_ascii=False))
+        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
 
 
 routes = [
