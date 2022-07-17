@@ -105,43 +105,73 @@ class Action(tornado.web.RequestHandler, ABC):
             }, ensure_ascii=False))
 
 
-class AppData(BaseHandler, ABC):
+class State(BaseHandler, ABC):
     def get(self):
-        data = db.get_all('data')[0]
-        self.write(json.dumps({
-            'code': 1,
-            'msg': '操作成功！',
-            'data': {
-                'state': data['state'],
-                'battery_car': data['battery_car'],
-                'battery_drone': data['battery_drone']
+        para_device_code = self.get_query_arguments('device_code')
+        if len(para_device_code) != 0:
+            data = db.get_all('state')
+            state = {
+                'device_code': '',
+                'state': '',
+                'battery_car': '',
+                'battery_drone': '',
             }
-        }, ensure_ascii=False))
+            for i in data:
+                if i['device_code'] == para_device_code[0]:
+                    state = i
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {
+                    'device_code': state['device_code'],
+                    'state': state['state'],
+                    'battery_car': state['battery_car'],
+                    'battery_drone': state['battery_drone']
+                }
+            }, ensure_ascii=False))
+        else:
+            self.write(json.dumps({
+                'code': -1,
+                'msg': '操作成功！',
+                'data': {}
+            }, ensure_ascii=False))
 
     def post(self):
-        data = db.get_all('data')[0]
-        state = data['state']
-        battery_car = data['battery_car']
-        battery_drone = data['battery_drone']
         body_arguments = self.request.body_arguments
-        if 'state' in body_arguments:
-            state = body_arguments['state'][0].decode()
-        if 'battery_car' in body_arguments:
-            battery_car = body_arguments['battery_car'][0].decode()
-        if 'battery_drone' in body_arguments:
-            battery_drone = body_arguments['battery_drone'][0].decode()
-        db.update_by_id('data', 1, 'state', state)
-        db.update_by_id('data', 1, 'battery_car', battery_car)
-        db.update_by_id('data', 1, 'battery_drone', battery_drone)
-        self.write(json.dumps({
-            'code': 1,
-            'msg': '操作成功！',
-            'data': {
-                'state': state,
-                'battery_car': battery_car,
-                'battery_drone': battery_drone
+        if 'device_code' in body_arguments:
+            para_device_code = body_arguments['device_code'][0].decode()
+            data = {
+                'device_code': '',
+                'state': '',
+                'battery_car': '',
+                'battery_drone': '',
             }
-        }, ensure_ascii=False))
+            for i in db.get_all('state'):
+                if i['device_code'] == para_device_code:
+                    data = i
+            state = data['state']
+            battery_car = data['battery_car']
+            battery_drone = data['battery_drone']
+            body_arguments = self.request.body_arguments
+            if 'state' in body_arguments:
+                state = body_arguments['state'][0].decode()
+            if 'battery_car' in body_arguments:
+                battery_car = body_arguments['battery_car'][0].decode()
+            if 'battery_drone' in body_arguments:
+                battery_drone = body_arguments['battery_drone'][0].decode()
+            db.update_by_field('state', 'device_code', para_device_code, 'state', state)
+            db.update_by_field('state', 'device_code', para_device_code, 'battery_car', battery_car)
+            db.update_by_field('state', 'device_code', para_device_code, 'battery_drone', battery_drone)
+            self.write(json.dumps({
+                'code': 1,
+                'msg': '操作成功！',
+                'data': {
+                    'device_code': para_device_code,
+                    'state': state,
+                    'battery_car': battery_car,
+                    'battery_drone': battery_drone
+                }
+            }, ensure_ascii=False))
 
 
 class Authorize(BaseHandler, ABC):
@@ -229,6 +259,7 @@ class Device(BaseHandler, ABC):
             asserts = "asserts/devices/qrcode_{}.png".format(timestamp)
             img.save(asserts)
             db.insert('device', [db_timestamp, device_code, '否', asserts])
+            db.insert('state', [device_code, '', '', ''])
         self.write(json.dumps({
             'code': 1,
             'msg': '操作成功！',
@@ -239,7 +270,7 @@ class Device(BaseHandler, ABC):
 def make_app():
     return tornado.web.Application([
         (r'/api/v1/check', Check),
-        (r'/api/v1/app/data', AppData),
+        (r'/api/v1/state', State),
         (r'/api/v1/action', Action),
         (r'/api/v1/login', Login),
         (r'/api/v1/authorize', Authorize),
@@ -250,8 +281,6 @@ def make_app():
 if __name__ == "__main__":
     # 初始化MySQL数据库
     db.init()
-    if len(db.get_all('data')) == 0:
-        db.insert('data', ['', '', ''])
     if len(db.get_all('account')) == 0:
         username = 'admin'
         password = hashlib.md5(username.encode('utf8')).hexdigest()

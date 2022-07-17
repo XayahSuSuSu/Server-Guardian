@@ -9,8 +9,9 @@ PASSWORD = '123456'  # 密码
 DB = 'App'  # 数据库名
 global db
 
-TABLE_DATA = 'data'  # 数据表名
-FIELD_DATA = [
+TABLE_STATE = 'state'  # 状态表名
+FIELD_STATE = [
+    "device_code text,",
     "state text,",
     "battery_car text,",
     "battery_drone text",
@@ -18,6 +19,7 @@ FIELD_DATA = [
 
 TABLE_ACTION = 'action'  # 操作表名
 FIELD_ACTION = [
+    "device_code text,",
     "action text,",
     "state text",
 ]  # 字段
@@ -67,12 +69,12 @@ def init():
     cursor.execute("CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARSET utf8 COLLATE utf8_general_ci;".format(DB))
     # 选择数据库
     cursor.execute("use {};".format(DB))
-    # 创建表(DATA)
-    field_data = "".join(FIELD_DATA)
+    # 创建表(STATE)
+    field_state = "".join(FIELD_STATE)
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_DATA)
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_STATE)
         + "created_at timestamp,updated_at timestamp,"
-        + field_data
+        + field_state
         + ");")
 
     # 创建表(ACTION)
@@ -141,5 +143,5 @@ def update_by_field(table, field_name, field_data, data_name, data):
     cursor.execute("use {};".format(DB))
     cursor.execute(
         "update {} set {} = '{}',updated_at = '{}' where {} = '{}'".format(table, data_name, data, db_timestamp(),
-                                                                         field_name, field_data))
+                                                                           field_name, field_data))
     db.commit()
