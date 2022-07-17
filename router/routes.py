@@ -193,6 +193,7 @@ class Authorize(BaseHandler, ABC):
             device_code = body_arguments['device_code'][0].decode()
             db.update_by_id('authorize', authorize_id, 'device_code', device_code)
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
@@ -217,7 +218,9 @@ class Device(BaseHandler, ABC):
             bind_state = body_arguments['bind_state'][0].decode()
             device_code = body_arguments['device_code'][0].decode()
             db.update_by_field('device', 'device_code', device_code, 'bind_state', bind_state)
-        else:
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            return
+        elif 'bind_state' not in body_arguments and 'device_code' not in body_arguments:
             db_timestamp = db.db_timestamp()
             timestamp = time.mktime(time.strptime(db_timestamp, "%Y-%m-%d %H:%M:%S"))
             device_code = hashlib.md5(str(timestamp).encode('utf8')).hexdigest()
@@ -228,7 +231,9 @@ class Device(BaseHandler, ABC):
             img.save(asserts)
             db.insert('device', [db_timestamp, device_code, '否', asserts])
             db.insert('state', [device_code, '', '', ''])
-        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
 routes = [
