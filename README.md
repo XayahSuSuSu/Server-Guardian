@@ -5,14 +5,16 @@
 • [API文档](https://github.com/XayahSuSuSu/Server-Guardian/wiki)
 
 ## 一、搭建RTMP服务器
-### 拉取`nginx-rtmp`镜像
+> 支持RTMP协议、HTTP-FLV协议、HTTP-HLS协议（未使用）
+
+### 拉取`rtmp-httpflv`镜像
 ```
-docker pull alfg/nginx-rtmp
+docker pull monelgq/rtmp-httpflv
 ```
 
 ### 创建并运行`nginx-rtmp`容器
 ```
-docker run -itd --name nginx-rtmp -p 33308:1935 alfg/nginx-rtmp
+docker run -itd --name rtmp-httpflv -p 33308:1935 -p 33309:7001 monelgq/rtmp-httpflv
 ```
 
 ### 推流（OBS Studio）
@@ -33,11 +35,15 @@ record
 ### 测试（PotPlayer）
 打开链接
 
+#### RTMP流
 ![测试0](images/测试0.png "测试0")
+
+#### HTTP-FLV流
+![测试1](images/测试1.png "测试1")
 
 查看RTMP流
 
-![测试1](images/测试1.png "测试1")
+![测试2](images/测试2.png "测试2")
 
 ### 推流（OpenCV）
 以`rtmp://127.0.0.1:33308/stream/car`为例
