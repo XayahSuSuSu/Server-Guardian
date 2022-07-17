@@ -9,15 +9,15 @@ docker pull alfg/nginx-rtmp
 
 ### 创建并运行`nginx-rtmp`容器
 ```
-docker run -itd --name nginx-rtmp -p 3308:1935 alfg/nginx-rtmp
+docker run -itd --name nginx-rtmp -p 33308:1935 alfg/nginx-rtmp
 ```
 
 ### 推流（OBS Studio）
-以`rtmp://127.0.0.1:3308/stream/record`为例
+以`rtmp://127.0.0.1:33308/stream/record`为例
 
 服务器：
 ```
-rtmp://127.0.0.1:3308/stream
+rtmp://127.0.0.1:33308/stream
 ```
 
 串流密钥：
@@ -65,7 +65,7 @@ docker pull mysql:latest
 
 ### 创建并运行`mysql`容器
 ```
-docker run -itd --name mysql-test -p 33306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
+docker run -itd --name mysql -p 33306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
 ```
 
 ### 安装相关依赖
