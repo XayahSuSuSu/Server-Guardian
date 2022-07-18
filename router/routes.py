@@ -144,6 +144,7 @@ class State(BaseHandler, ABC):
                 battery_car = body_arguments['battery_car'][0].decode()
             if 'battery_drone' in body_arguments:
                 battery_drone = body_arguments['battery_drone'][0].decode()
+            # 可以用一条sql指令优化
             db.update_by_field('state', 'device_code', para_device_code, 'state', state)
             db.update_by_field('state', 'device_code', para_device_code, 'battery_car', battery_car)
             db.update_by_field('state', 'device_code', para_device_code, 'battery_drone', battery_drone)
@@ -161,7 +162,7 @@ class Authorize(BaseHandler, ABC):
     def get(self):
         para_id = self.get_query_arguments('id')
         if len(para_id) == 0:
-            db.insert('authorize', [''])
+            db.insert('authorize', ['', '', ''])
             authorize_id = db.get_all('authorize')[-1]['id']
             img = qrcode.make(json.dumps({
                 'id': authorize_id
@@ -176,22 +177,31 @@ class Authorize(BaseHandler, ABC):
             authorize_id = db.get_all('authorize')
             dic = {
                 'id': '',
-                'device_code': ''
+                'device_code': '',
+                'rtmp_address_court': '',
+                'rtmp_address_car': '',
             }
             for i in authorize_id:
                 if str(i['id']) == para_id[0]:
                     dic = i
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {
                 'id': dic['id'],
-                'device_code': dic['device_code']
+                'device_code': dic['device_code'],
+                'rtmp_address_court': dic['rtmp_address_court'],
+                'rtmp_address_car': dic['rtmp_address_car'],
             }), ensure_ascii=False))
 
     def post(self):
         body_arguments = self.request.body_arguments
-        if 'id' in body_arguments and 'device_code' in body_arguments:
+        if 'id' in body_arguments and 'device_code' in body_arguments and 'rtmp_address_court' in body_arguments and 'rtmp_address_car' in body_arguments:
             authorize_id = body_arguments['id'][0].decode()
             device_code = body_arguments['device_code'][0].decode()
+            rtmp_address_court = body_arguments['rtmp_address_court'][0].decode()
+            rtmp_address_car = body_arguments['rtmp_address_car'][0].decode()
+            # 可以用一条sql指令优化
             db.update_by_id('authorize', authorize_id, 'device_code', device_code)
+            db.update_by_id('authorize', authorize_id, 'rtmp_address_court', rtmp_address_court)
+            db.update_by_id('authorize', authorize_id, 'rtmp_address_car', rtmp_address_car)
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
             return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))

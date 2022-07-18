@@ -32,7 +32,9 @@ FIELD_ACCOUNT = [
 
 TABLE_AUTHORIZE = 'authorize'  # 授权表名
 FIELD_AUTHORIZE = [
-    "device_code text",
+    "device_code text,",
+    "rtmp_address_court text,",
+    "rtmp_address_car text",
 ]  # 字段
 
 TABLE_DEVICE = 'device'  # 设备表名
