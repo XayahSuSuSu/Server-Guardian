@@ -51,7 +51,7 @@ FIELD_FACE = [
     "name text,",
     "path text,",
     "face_feature mediumblob",
-]
+]  # 字段
 
 
 def db_timestamp():
@@ -69,6 +69,14 @@ def get_all(table):
     return data
 
 
+def create_table(cursor, field, table):
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(table)
+        + "created_at timestamp,updated_at timestamp,"
+        + "".join(field)
+        + ");")
+
+
 def init():
     """创建数据库和数据表"""
     global db
@@ -80,52 +88,22 @@ def init():
     # 选择数据库
     cursor.execute("use {};".format(DB))
     # 创建表(STATE)
-    field_state = "".join(FIELD_STATE)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_STATE)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_state
-        + ");")
+    create_table(cursor, FIELD_STATE, TABLE_STATE)
 
     # 创建表(ACTION)
-    field_action = "".join(FIELD_ACTION)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACTION)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_action
-        + ");")
+    create_table(cursor, FIELD_ACTION, TABLE_ACTION)
 
     # 创建表(ACCOUNT)
-    field_account = "".join(FIELD_ACCOUNT)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_ACCOUNT)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_account
-        + ");")
+    create_table(cursor, FIELD_ACCOUNT, TABLE_ACCOUNT)
 
     # 创建表(AUTHORIZE)
-    field_authorize = "".join(FIELD_AUTHORIZE)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_AUTHORIZE)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_authorize
-        + ");")
+    create_table(cursor, FIELD_AUTHORIZE, TABLE_AUTHORIZE)
 
     # 创建表(DEVICE)
-    field_device = "".join(FIELD_DEVICE)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_DEVICE)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_device
-        + ");")
+    create_table(cursor, FIELD_DEVICE, TABLE_DEVICE)
 
     # 创建表(FACE)
-    field_face = "".join(FIELD_FACE)
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_FACE)
-        + "created_at timestamp,updated_at timestamp,"
-        + field_face
-        + ");")
+    create_table(cursor, FIELD_FACE, TABLE_FACE)
 
 
 def insert(table, data):
