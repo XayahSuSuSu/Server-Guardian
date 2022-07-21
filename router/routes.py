@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import threading
 import time
 from abc import ABC
@@ -345,14 +346,41 @@ class Map(BaseHandler, ABC):
             if 'file' in files:
                 for i in files['file']:
                     suffix = i['filename'].split(".")[-1]
-                    path = 'asserts/map/{}_{}.'.format(len(db.get_all('map')) + 1, "map")
-                    path_with_suffix = path + suffix
-                    with open(path_with_suffix, 'wb') as f:
+                    path = 'asserts/map/{}_{}.{}'.format(len(db.get_all('map')) + 1, "map", suffix)
+                    with open(path, 'wb') as f:
                         f.write(i['body'])  # 写入数据
-                        Image.open(path_with_suffix).save(path + "png")
-                    db.insert("map", [device_code, path_with_suffix])
+                        Image.open(path).save(path.replace(".pgm", ".png"))
+                    db.insert("map", [device_code, path])
                 self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
                 return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+
+class PicturesDelete(BaseHandler, ABC):
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'path' in body_arguments:
+            path = body_arguments['path'][0].decode()
+            db.delete_by_field('face', 'path', path)
+            if os.path.exists(path):
+                os.remove(path)
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+
+class MapDelete(BaseHandler, ABC):
+    def post(self):
+        body_arguments = self.request.body_arguments
+        if 'path' in body_arguments:
+            path = body_arguments['path'][0].decode()
+            db.delete_by_field('map', 'path', path)
+            if os.path.exists(path):
+                os.remove(path)
+            if os.path.exists(path.replace(".pgm", ".png")):
+                os.remove(path.replace(".pgm", ".png"))
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+            return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
@@ -364,6 +392,8 @@ routes = [
     (r'/api/v1/authorize', Authorize),
     (r'/api/v1/device', Device),
     (r'/api/v1/pictures', Pictures),
+    (r'/api/v1/pictures/delete', PicturesDelete),
     (r'/api/v1/face', Face),
     (r'/api/v1/map', Map),
+    (r'/api/v1/map/delete', MapDelete),
 ]

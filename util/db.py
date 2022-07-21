@@ -148,3 +148,13 @@ def update_by_field(table, field_name, field_data, data_name, data):
         "update {} set {} = '{}',updated_at = '{}' where {} = '{}'".format(table, data_name, data, db_timestamp(),
                                                                            field_name, field_data))
     db.commit()
+
+
+def delete_by_field(table, field_name, field_data):
+    """删除一条记录"""
+    db.ping()
+    cursor = db.cursor()
+    cursor.execute("use {};".format(DB))
+    cursor.execute("delete from {} where {} = '{}';".format(table, field_name, field_data))
+    db.commit()
+    db.close()
