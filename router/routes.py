@@ -59,14 +59,16 @@ class Login(BaseHandler, ABC):
 
 
 semaphore = threading.Semaphore(0)
+lock = threading.Semaphore(1)
 action_list = []
 
 
 class Action(tornado.web.RequestHandler, ABC):
-    executor = ThreadPoolExecutor(2)
+    executor = ThreadPoolExecutor(1)
 
     @tornado.gen.coroutine
     def get(self):
+        lock.acquire()
         yield self.sem()
         if len(action_list) != 0:
             action_dic = action_list.pop()
@@ -75,6 +77,7 @@ class Action(tornado.web.RequestHandler, ABC):
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, action_dic), ensure_ascii=False))
             return
         self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+        lock.release()
 
     @run_on_executor
     def sem(self):
@@ -82,6 +85,7 @@ class Action(tornado.web.RequestHandler, ABC):
         return
 
     def post(self):
+        lock.acquire()
         body_arguments = self.request.body_arguments
         if 'action' in body_arguments:
             action = body_arguments['action'][0].decode()
@@ -96,8 +100,10 @@ class Action(tornado.web.RequestHandler, ABC):
                 semaphore.release()
             action_list.append(action_dic)
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, action_dic), ensure_ascii=False))
+            lock.release()
             return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+        lock.release()
 
 
 class State(BaseHandler, ABC):
