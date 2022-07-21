@@ -283,9 +283,11 @@ class Pictures(BaseHandler, ABC):
                     path = 'asserts/pictures/{}_{}.{}'.format(len(db.get_all('face')) + 1, name, suffix)
                     with open(path, 'wb') as f:
                         f.write(picture_bytes)  # 写入数据
-                    db.insert("face", [device_code, name, path, getFaceFeature(picture_bytes)[0]['face_feature']])
-                self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
-                return
+                    face_feature = getFaceFeature(picture_bytes)
+                    if len(face_feature) > 0:
+                        db.insert("face", [device_code, name, path, face_feature[0]['face_feature']])
+                        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+                        return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
