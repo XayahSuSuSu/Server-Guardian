@@ -319,6 +319,40 @@ class Face(BaseHandler, ABC):
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
+class Map(BaseHandler, ABC):
+    def get(self):
+        device_code = self.get_query_arguments('device_code')
+        if len(device_code) != 0:
+            device_code = device_code[0]
+            dic = []
+            data = db.get_all('map')
+            for i in data:
+                if i['device_code'] == device_code:
+                    dic.append({
+                        'device_code': i['device_code'],
+                        'path': i['path']
+                    })
+            self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, dic), ensure_ascii=False))
+            return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+    def post(self):
+        files = self.request.files
+        body_arguments = self.request.body_arguments
+        if 'device_code' in body_arguments:
+            device_code = body_arguments['device_code'][0].decode()
+            if 'file' in files:
+                for i in files['file']:
+                    suffix = i['filename'].split(".")[-1]
+                    path = 'asserts/map/{}_{}.{}'.format(len(db.get_all('map')) + 1, "map", suffix)
+                    with open(path, 'wb') as f:
+                        f.write(i['body'])  # 写入数据
+                    db.insert("map", [device_code, path])
+                self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+                return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+
 routes = [
     (r'/api/v1/check', Check),
     (r'/api/v1/state', State),
@@ -328,4 +362,5 @@ routes = [
     (r'/api/v1/device', Device),
     (r'/api/v1/pictures', Pictures),
     (r'/api/v1/face', Face),
+    (r'/api/v1/map', Map),
 ]

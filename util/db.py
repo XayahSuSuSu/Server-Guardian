@@ -53,6 +53,12 @@ FIELD_FACE = [
     "face_feature mediumblob",
 ]  # 字段
 
+TABLE_MAP = 'map'
+FIELD_MAP = [
+    "device_code text,",
+    "path text",
+]  # 字段
+
 
 def db_timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -104,6 +110,9 @@ def init():
 
     # 创建表(FACE)
     create_table(cursor, FIELD_FACE, TABLE_FACE)
+
+    # 创建表(MAP)
+    create_table(cursor, FIELD_MAP, TABLE_MAP)
 
 
 def insert(table, data):
