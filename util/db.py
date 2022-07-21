@@ -45,6 +45,14 @@ FIELD_DEVICE = [
     "qrcode_path text",
 ]  # 字段
 
+TABLE_FACE = 'face'
+FIELD_FACE = [
+    "device_code text,",
+    "name text,",
+    "path text,",
+    "face_feature mediumblob",
+]
+
 
 def db_timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -111,6 +119,14 @@ def init():
         + field_device
         + ");")
 
+    # 创建表(FACE)
+    field_face = "".join(FIELD_FACE)
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS {}(id int primary key not null auto_increment,".format(TABLE_FACE)
+        + "created_at timestamp,updated_at timestamp,"
+        + field_face
+        + ");")
+
 
 def insert(table, data):
     """插入一条记录"""
@@ -119,11 +135,9 @@ def insert(table, data):
     cursor.execute("use {};".format(DB))
     insert_data = "INSERT INTO {} VALUES (0,'{}','{}'".format(table, db_timestamp(), db_timestamp())
     for i in data:
-        insert_data += ",'"
-        insert_data += i
-        insert_data += "'"
+        insert_data += ",%s"
     insert_data += ")"
-    cursor.execute(insert_data)
+    cursor.execute(insert_data, tuple(data))
     db.commit()
 
 

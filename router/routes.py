@@ -11,6 +11,7 @@ import tornado.web
 from tornado.concurrent import run_on_executor
 
 from util import db
+from util.face import getFaceFeature
 
 CODE_SUCCESS = 1
 MSG_SUCCESS = '操作成功'
@@ -246,6 +247,26 @@ class Device(BaseHandler, ABC):
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
+class Pictures(BaseHandler, ABC):
+    def post(self):
+        files = self.request.files
+        body_arguments = self.request.body_arguments
+        if 'name' in body_arguments and 'device_code' in body_arguments:
+            name = body_arguments['name'][0].decode()
+            device_code = body_arguments['device_code'][0].decode()
+            if 'file' in files:
+                for i in files['file']:
+                    picture_bytes = i['body']
+                    suffix = i['filename'].split(".")[-1]
+                    path = 'asserts/pictures/{}_{}.{}'.format(len(db.get_all('face')) + 1, name, suffix)
+                    with open(path, 'wb') as f:
+                        f.write(picture_bytes)  # 写入数据
+                    db.insert("face", [device_code, name, path, getFaceFeature(picture_bytes)[0]['face_feature']])
+                self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+                return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+
 routes = [
     (r'/api/v1/check', Check),
     (r'/api/v1/state', State),
@@ -253,4 +274,5 @@ routes = [
     (r'/api/v1/login', Login),
     (r'/api/v1/authorize', Authorize),
     (r'/api/v1/device', Device),
+    (r'/api/v1/pictures', Pictures),
 ]
