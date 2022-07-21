@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import qrcode
 import tornado.gen
 import tornado.web
+from PIL import Image
 from tornado.concurrent import run_on_executor
 
 from util import db
@@ -344,10 +345,12 @@ class Map(BaseHandler, ABC):
             if 'file' in files:
                 for i in files['file']:
                     suffix = i['filename'].split(".")[-1]
-                    path = 'asserts/map/{}_{}.{}'.format(len(db.get_all('map')) + 1, "map", suffix)
-                    with open(path, 'wb') as f:
+                    path = 'asserts/map/{}_{}.'.format(len(db.get_all('map')) + 1, "map")
+                    path_with_suffix = path + suffix
+                    with open(path_with_suffix, 'wb') as f:
                         f.write(i['body'])  # 写入数据
-                    db.insert("map", [device_code, path])
+                        Image.open(path_with_suffix).save(path + "png")
+                    db.insert("map", [device_code, path_with_suffix])
                 self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
                 return
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
