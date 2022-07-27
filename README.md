@@ -5,16 +5,16 @@
 • [API文档](https://github.com/XayahSuSuSu/Server-Guardian/wiki)
 
 ## 一、搭建RTMP服务器
-> 支持RTMP协议、HTTP-FLV协议、HTTP-HLS协议（未使用）
+> 支持RTMP协议、HTTP-FLV协议
 
-### 拉取`rtmp-httpflv`镜像
+### 拉取`nginx-rtmp-httpflv`镜像
 ```
-docker pull monelgq/rtmp-httpflv
+docker pull xayahsususu/nginx-rtmp-httpflv
 ```
 
 ### 创建并运行`nginx-rtmp`容器
 ```
-docker run -itd --name rtmp-httpflv -p 33308:1935 -p 33309:7001 monelgq/rtmp-httpflv
+docker run -itd --name nginx-rtmp-httpflv -p 33308:1935 -p 33309:80 xayahsususu/nginx-rtmp-httpflv
 ```
 
 ### 推流（OBS Studio）
