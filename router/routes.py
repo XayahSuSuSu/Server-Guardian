@@ -68,13 +68,14 @@ class Action(tornado.web.RequestHandler, ABC):
 
     @tornado.gen.coroutine
     def get(self):
-        lock.acquire()
         yield self.sem()
+        lock.acquire()
         if len(action_list) != 0:
             action_dic = action_list.pop()
             print("Action", "get", action_dic)
-            db.insert('action', [action_dic['action'], 'finished'])
+            # db.insert('action', [action_dic['action'], 'finished'])
             self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, action_dic), ensure_ascii=False))
+            lock.release()
             return
         self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
         lock.release()
