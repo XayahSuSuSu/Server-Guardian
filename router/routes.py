@@ -393,6 +393,27 @@ class MapDelete(BaseHandler, ABC):
         self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
 
 
+class Reid(BaseHandler, ABC):
+    def get(self):
+        dic = []
+        for _, _, files in os.walk("asserts/reid"):
+            for i in files:
+                dic.append("asserts/reid/" + i)
+        self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, dic), ensure_ascii=False))
+
+    def post(self):
+        files = self.request.files
+        if 'file' in files:
+            for i in files['file']:
+                reid_bytes = i['body']
+                path = 'asserts/reid/reid.npy'
+                with open(path, 'wb') as f:
+                    f.write(reid_bytes)
+                self.write(json.dumps(ret(CODE_SUCCESS, MSG_SUCCESS, {}), ensure_ascii=False))
+                return
+        self.write(json.dumps(ret(CODE_FAILED, MSG_PARA_LOSS, {}), ensure_ascii=False))
+
+
 routes = [
     (r'/api/v1/check', Check),
     (r'/api/v1/state', State),
@@ -405,4 +426,5 @@ routes = [
     (r'/api/v1/face', Face),
     (r'/api/v1/map', Map),
     (r'/api/v1/map/delete', MapDelete),
+    (r'/api/v1/reid', Reid),
 ]

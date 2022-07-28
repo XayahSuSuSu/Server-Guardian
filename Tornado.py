@@ -36,6 +36,8 @@ if __name__ == "__main__":
         os.mkdir("asserts/pictures")
     if not os.path.exists("asserts/map"):
         os.mkdir("asserts/map")
+    if not os.path.exists("asserts/reid"):
+        os.mkdir("asserts/reid")
     app = make_app()
     app.listen(port=33307)
     tornado.ioloop.IOLoop.current().start()
